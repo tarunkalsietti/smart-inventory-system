@@ -1,3 +1,0 @@
-This service simulates a high-concurrency inventory reservation system using 
-Redis atomic operations and TTL-based reservations to prevent overselling 
-during flash sales.
