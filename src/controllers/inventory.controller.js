@@ -10,11 +10,13 @@ exports.reserve = async (req, res, next) => {
 
     const result = await createReservation({ sku, userId });
 
-    if (result.status?.err === "OUT_OF_STOCK") {
+    // ✅ FIX: correct OUT_OF_STOCK handling
+    if (result.status === "OUT_OF_STOCK") {
       return res.status(409).json({ error: "Out of stock" });
     }
 
-    res.json({
+    // ✅ success case
+    return res.json({
       reservationId: result.reservationId,
       expiresIn: result.expiresIn,
     });
@@ -22,3 +24,4 @@ exports.reserve = async (req, res, next) => {
     next(err);
   }
 };
+

@@ -16,7 +16,7 @@ async function reserveInventory({
 }) {
   return redisClient.eval(luaScript, {
     keys: [inventoryKey, reservationKey],
-    arguments: [reservationData, ttlSeconds],
+    arguments: [reservationData, String(ttlSeconds)],
   });
 }
 

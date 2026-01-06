@@ -3,13 +3,13 @@
 // confirm reservation
 
 // handle expiry
+const redisClient = require("../config/redis");
 
 const { reserveInventory } = require("../repositories/reservation.repo");
 const { inventoryKey, reservationKey } = require("../utils/redisKeys");
 const crypto = require("crypto");
 
 const RESERVATION_TTL = 300; // 5 minutes
-
 async function createReservation({ sku, userId }) {
   const reservationId = crypto.randomUUID();
 
@@ -21,19 +21,27 @@ async function createReservation({ sku, userId }) {
     expiresAt: Date.now() + RESERVATION_TTL * 1000,
   });
 
-  const result = await reserveInventory({
-    inventoryKey: inventoryKey(sku),
-    reservationKey: reservationKey(reservationId),
-    reservationData,
-    ttlSeconds: RESERVATION_TTL,
-  });
+  try {
+    await reserveInventory({
+      inventoryKey: inventoryKey(sku),
+      reservationKey: reservationKey(reservationId),
+      reservationData,
+      ttlSeconds: RESERVATION_TTL,
+    });
 
-  return {
-    reservationId,
-    status: result,
-    expiresIn: RESERVATION_TTL,
-  };
+    return {
+      status: "RESERVED",
+      reservationId,
+      expiresIn: RESERVATION_TTL,
+    };
+  } catch (err) {
+    if (err.message === "OUT_OF_STOCK") {
+      return { status: "OUT_OF_STOCK" };
+    }
+    throw err; // unknown error → crash
+  }
 }
+
 
 
 async function confirmReservation(reservationId) {

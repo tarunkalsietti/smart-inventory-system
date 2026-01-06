@@ -9,16 +9,20 @@ module.exports = (scope) => {
     }
 
     const redisKey = idempotencyKey(scope, key);
-    const cached = await redisClient.get(redisKey);
 
+    // ✅ 1. HARD SHORT-CIRCUIT
+    const cached = await redisClient.get(redisKey);
     if (cached) {
-      return res.json(JSON.parse(cached));
+      return res.status(200).json(JSON.parse(cached));
     }
 
-    // Hook response to save later
+    // ✅ 2. Wrap res.json ONLY for success
     const originalJson = res.json.bind(res);
+
     res.json = (body) => {
-      redisClient.setEx(redisKey, 300, JSON.stringify(body));
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        redisClient.setEx(redisKey, 300, JSON.stringify(body));
+      }
       return originalJson(body);
     };
 
