@@ -1,4 +1,5 @@
 const { createReservation } = require("../services/reservation.service");
+const { getInventory } = require("../services/inventory.service");
 
 exports.reserve = async (req, res, next) => {
   try {
@@ -19,6 +20,33 @@ exports.reserve = async (req, res, next) => {
     return res.json({
       reservationId: result.reservationId,
       expiresIn: result.expiresIn,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+
+
+
+
+
+
+exports.getInventory = async (req, res, next) => {
+  try {
+    const { sku } = req.params;
+
+    if (!sku) {
+      return res.status(400).json({ error: "sku required" });
+    }
+
+    const available = await getInventory(sku);
+
+    res.json({
+      sku,
+      available,
     });
   } catch (err) {
     next(err);
